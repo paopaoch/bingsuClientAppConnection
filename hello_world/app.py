@@ -20,16 +20,17 @@ def lambda_handler(event, context):
     source = item['source']
     dest = item['dest']
     name = item['name']
-    # id_key = item['company'].lower() + '_id'
-    # app_id = item['id']
+    id_key = item['company'].lower() + '_id'
+    app_id = item['id']
     items_no = int(item['item_no'])
     dynamodb = boto3.resource('dynamodb')
     emmision_table = dynamodb.Table('BingsuEmissionRate')
     user_table = dynamodb.Table('BingsuUser')
-    # response_user = user_table.query(
-    #     IndexName=id_key,
-    #     KeyConditionExpression=Key(id_key).eq(app_id)
-    # )
+    response_user = user_table.query(
+        IndexName=id_key,
+        KeyConditionExpression=Key(id_key).eq(app_id)
+    )
+    old_points = int(response_user['Items'][0][item['company'].lower() + '_points'])
     response_emission = emmision_table.query(
         KeyConditionExpression=Key('uuid').eq(name)
     )
@@ -57,6 +58,9 @@ def lambda_handler(event, context):
     carbon_emission_g_adj_2 = carbon_emission_g_adj_1 * (distance_km/(distance_km + 2))
     item_metrics = 1 + items_no/20
     score = carbon_emission_g_adj_2/item_metrics
+    old_score = 500 - old_points/10
+    new_score = (old_score + score)/2
+    new_points = 10*(500 - new_score)
 
     return {
         "statusCode": 200,
@@ -65,7 +69,7 @@ def lambda_handler(event, context):
             "time" : time_hr,
             "speed" : avg_speed_kmph,
             "emission_rate" : emission_rate,
-            # "score" : score
-            # "response_user" : response_user
+            "score" : score,
+            "oldpoints" : new_points
         }),
     }
