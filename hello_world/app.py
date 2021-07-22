@@ -65,7 +65,7 @@ def lambda_handler(event, context):
             "time" : time_hr,
             "speed" : avg_speed_kmph,
             "emission_rate" : emission_rate,
-            "score" : score
+            # "score" : score
             # "response_user" : response_user
         }),
     }
