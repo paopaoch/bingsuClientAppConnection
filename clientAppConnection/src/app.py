@@ -95,4 +95,21 @@ def calculate_points(event, context):
 
 
 def get_external_client_id_mock_up(event, context):
-    return {'data': 'hello world'}
+    from uuid import uuid4
+    item = event['arguments']
+    user_id = item['user_id']
+    company = item['company']
+    company_id = str(uuid4())
+
+    client_lambda = boto3.client('lambda')
+    arguments = {
+        "user_id": user_id,
+        company + '_id': company_id
+    }
+    update_user_response = client_lambda.invoke(
+        FunctionName = 'arn:aws:lambda:ap-southeast-1:405742985670:function:bingsuUser-UpdateUserFunction-9I54tc4Xyb2h',
+        InvocationType = 'RequestResponse',
+        Payload = json.dumps({'arguments': arguments})
+    )
+    update_user_status =  json.load(update_user_response['Payload'])
+    return {'save_status': update_user_status, company + '_id': company_id}
