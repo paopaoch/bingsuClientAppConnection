@@ -1,0 +1,1 @@
+from src.app import calculate_points, get_external_client_id_mock_up
