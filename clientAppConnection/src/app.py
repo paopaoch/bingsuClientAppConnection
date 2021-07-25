@@ -12,6 +12,7 @@ def calculate_points(event, context):
     id_key = item['company'].lower() + '_id'
     app_id = item['id']
     write = item['write']
+    restaurant_name = item['restaurant']
     items_no = int(item['item_no'])
     dynamodb = boto3.resource('dynamodb')
 
@@ -78,6 +79,23 @@ def calculate_points(event, context):
             Payload = json.dumps({'arguments': arguments})
         )
         update_user_status =  json.load(update_user_response['Payload'])
+
+        arguments = {
+            "user_id": response_user['Items'][0]['user_id']
+            ,"points_amount": new_points - old_points
+            ,"company_name": item['company'].lower()
+            ,"co2_amount": carbon_emission_g
+            ,"restaurant_name": restaurant_name
+            ,"distance": distance_km
+            ,"item": item_metrics
+        }
+        insert_trans_response = client_lambda.invoke(
+            FunctionName = 'arn:aws:lambda:ap-southeast-1:405742985670:function:bingsuPointsTrans-AddPointsTransFunction-p02oBr9UtPyz',
+            InvocationType = 'RequestResponse',
+            Payload = json.dumps({'arguments': arguments})
+        )
+        insert_trans_status =  json.load(insert_trans_response['Payload'])
+        
     else:
         update_user_status = "write was false"
     return {
@@ -89,7 +107,8 @@ def calculate_points(event, context):
             "emission_rate" : emission_rate,
             "score" : score,
             "new_points" : new_points,
-            "save_status": update_user_status
+            "save_status": update_user_status,
+            "insert_status": insert_trans_status
         }),
     }
 
