@@ -9,7 +9,11 @@ def calculate_points(event, context):
     source = item['source']
     dest = item['dest']
     name = item['name']
-    id_key = item['company'].lower() + '_id'
+    if item['id_user']:
+        id_type='user'
+    else:
+        id_type = item['company'].lower()
+    id_key = id_type + '_id'
     app_id = item['id']
     write = item['write']
     restaurant_name = item['restaurant']
@@ -18,10 +22,16 @@ def calculate_points(event, context):
 
 
     user_table = dynamodb.Table('BingsuUser')
-    response_user = user_table.query(
-        IndexName=id_key,
-        KeyConditionExpression=Key(id_key).eq(app_id)
-    )
+    if item['id_user']:
+        response_user = user_table.query(
+            KeyConditionExpression=Key(id_key).eq(app_id)
+        )
+    else:
+        response_user = user_table.query(
+            IndexName=id_key,
+            KeyConditionExpression=Key(id_key).eq(app_id)
+        )
+        
     old_points = int(response_user['Items'][0][item['company'].lower() + '_points'])
 
 
@@ -87,7 +97,7 @@ def calculate_points(event, context):
             ,"co2_amount": carbon_emission_g
             ,"restaurant_name": restaurant_name
             ,"distance": distance_km
-            ,"item": item_metrics
+            ,"item": items_no
         }
         insert_trans_response = client_lambda.invoke(
             FunctionName = 'arn:aws:lambda:ap-southeast-1:405742985670:function:bingsuPointsTrans-AddPointsTransFunction-p02oBr9UtPyz',
@@ -96,20 +106,20 @@ def calculate_points(event, context):
         )
         insert_trans_status =  json.load(insert_trans_response['Payload'])
         
+        carbon_emission_g = 0
+        new_points = 0
+
     else:
         update_user_status = "write was false"
+        insert_trans_status = "write was false"
     return {
         "statusCode": 200,
-        "body": json.dumps({
-            "distance": distance_km,
-            "time" : time_hr,
-            "speed" : avg_speed_kmph,
-            "emission_rate" : emission_rate,
-            "score" : score,
-            "new_points" : new_points,
+        "body": {
+            "carbon_emission_g" : carbon_emission_g,
+            "points" : new_points - old_points,
             "save_status": update_user_status,
             "insert_status": insert_trans_status
-        }),
+        },
     }
 
 
@@ -128,7 +138,7 @@ def get_external_client_id_mock_up(event, context):
     update_user_response = client_lambda.invoke(
         FunctionName = 'arn:aws:lambda:ap-southeast-1:405742985670:function:bingsuUser-UpdateUserFunction-9I54tc4Xyb2h',
         InvocationType = 'RequestResponse',
-        Payload = json.dumps({'arguments': arguments})
+        Payload = json.loads({'arguments': arguments})
     )
     update_user_status =  json.load(update_user_response['Payload'])
     return {'save_status': update_user_status, company + '_id': company_id}
