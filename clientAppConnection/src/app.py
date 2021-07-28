@@ -69,7 +69,7 @@ def calculate_points(event, context):
     item_metrics = 1 + items_no/20
     score = carbon_emission_g_adj_2/item_metrics
     old_score = 500 - old_points/10
-    new_score = (old_score + score)/2
+    new_score = (old_score*1.5 + score)/2
     new_points = int(10*(500 - new_score))
 
     new_carbons = float(response_user['Items'][0]['co2_amount']) + carbon_emission_g
