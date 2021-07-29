@@ -4,8 +4,6 @@ import boto3
 from boto3.dynamodb.conditions import Key
 import math
 
-# todo: connect to CO2 sum table, add some error handling
-
 # input: 
 # {
 # "arguments": {
