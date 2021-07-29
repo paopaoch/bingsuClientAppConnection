@@ -137,8 +137,22 @@ def calculate_points(event, context):
             InvocationType = 'RequestResponse',
             Payload = json.dumps({'arguments': arguments})
         )
-        # update_trans_status =  str(json.load(update_trans_response['Payload'])['status'])
-        
+        update_trans_status =  str(json.load(update_trans_response['Payload'])['status'])
+        if update_trans_status == '400':
+            return {"status": 400, "body": {"carbon_emission_g" : 0, "points" : 0, "save_status": update_user_status, "insert_status": "fail to execute AddSumCarbonTransFunction"}}
+        arguments = {
+            "company": item['company'].lower()
+            ,"co2_amount": carbon_emission_g
+        }
+        update_total_day_response = client_lambda.invoke(
+            FunctionName = 'arn:aws:lambda:ap-southeast-1:405742985670:function:bingsuDonationTrans-UpdateTotalCo2AmountFunction-e5SrQgUo3kPa',
+            InvocationType = 'RequestResponse',
+            Payload = json.dumps({'arguments': arguments})
+        )
+
+        update_total_day_status =  str(json.load(update_total_day_response['Payload'])['status'])
+        if update_total_day_status == '400':
+            return {"status": 400, "body": {"carbon_emission_g" : 0, "points" : 0, "save_status": update_user_status, "insert_status": "fail to execute UpdateTotalCo2AmountFunction"}}
         carbon_emission_g = 0
         new_points = 0
 
