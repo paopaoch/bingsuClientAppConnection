@@ -4,6 +4,28 @@ import boto3
 from boto3.dynamodb.conditions import Key
 import math
 
+# todo: connect to CO2 sum table, add some error handling
+
+# input: 
+# {
+# "arguments": {
+#     "id": "can be company id or user id",
+#     "id_user": true | false
+#     "company": "robinhood",
+#     "source": [
+#     100.58457117905004,
+#     13.725473463355671
+#     ],
+#     "dest": [
+#     100.60122284953393,
+#     13.709097631083452
+#     ],
+#     "name": "Yamaha Diversion",
+#     "item_no": "5",
+#     "write": true | false,
+#     "restaurant": "GinGubKo"
+#   }
+# }
 def calculate_points(event, context):
     item = event['arguments']
     source = item['source']
@@ -134,7 +156,7 @@ def calculate_points(event, context):
         },
     }
 
-
+# input: user_id, company
 def get_external_client_id_mock_up(event, context):
     from uuid import uuid4
     item = event['arguments']
